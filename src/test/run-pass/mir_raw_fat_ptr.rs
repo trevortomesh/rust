@@ -156,6 +156,7 @@ fn main() {
         S(10, [11, 12, 13]),
         S(4, [5, 6])
     );
+    mem::drop(&ss); // HACK(eddyb) avoid optimizations splitting `ss.{0,1,2}`.
     assert_inorder(&[
         &ss.0 as *const S<[u8]>,
         &ss.1 as *const S<[u8]>,

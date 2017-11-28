@@ -134,6 +134,24 @@ impl<'tcx> LocalPaths<'tcx> {
             }
         }
     }
+
+    /// Add a new local to the given `mir` (which is assumed to be the
+    /// one `self` was created from) and record a new path for it.
+    pub fn create_and_record_new_local(&mut self,
+                                       mir: &mut Mir<'tcx>,
+                                       decl: LocalDecl<'tcx>)
+                                       -> Local {
+        let path = self.data.push(PathData {
+            ty: decl.ty,
+            last_descendant: PathId::new(0),
+            accessed: true
+        });
+        self.data[path].last_descendant = path;
+
+        let local = mir.local_decls.push(decl);
+        assert_eq!(self.locals.push(path), local);
+        local
+    }
 }
 
 pub struct Children<'a, 'tcx: 'a> {
