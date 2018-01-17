@@ -15,6 +15,7 @@ use rustc::ty::Ty;
 use std::iter::Step;
 use std::ops::Range;
 
+pub mod borrows;
 pub mod collect;
 
 newtype_index!(PathId { DEBUG_FORMAT = "PathId({})" });
@@ -95,6 +96,41 @@ impl<'tcx> LocalPaths<'tcx> {
             // Can't support without alias analysis.
             ProjectionElem::Index(_) |
             ProjectionElem::Deref => None
+        }
+    }
+
+    /// If possible, obtain a `PathId` for the complete `Place` (as `Ok(_)`),
+    /// otherwise, give the longest `PathId` prefix (as `Err(Some(_))`).
+    pub fn place_path(&self, place: &Place) -> Result<PathId, Option<PathId>> {
+        match *place {
+            Place::Local(local) => Ok(self.locals[local]),
+            Place::Static(_) => Err(None),
+            Place::Projection(ref proj) => {
+                let base = self.place_path(&proj.base)?;
+                match self.project(base, &proj.elem) {
+                    Some(child) => Ok(child),
+                    None => Err(Some(base))
+                }
+            }
+        }
+    }
+
+    /// Like `place_path`, but for the shortest accessed path prefix of the `place`.
+    /// If the path doesn't refer to the complete `place`, it's returned in `Err`.
+    pub fn place_path_acessed_prefix(&self, place: &Place) -> Result<PathId, Option<PathId>> {
+        match *place {
+            Place::Local(local) => Ok(self.locals[local]),
+            Place::Static(_) => Err(None),
+            Place::Projection(ref proj) => {
+                let base = self.place_path_acessed_prefix(&proj.base)?;
+                if self.data[base].accessed {
+                    return Err(Some(base));
+                }
+                match self.project(base, &proj.elem) {
+                    Some(child) => Ok(child),
+                    None => Err(Some(base))
+                }
+            }
         }
     }
 }
