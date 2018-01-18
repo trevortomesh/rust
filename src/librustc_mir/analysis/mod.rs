@@ -13,3 +13,4 @@ pub mod dataflow;
 pub mod def_use;
 pub mod liveness;
 pub mod local_paths;
+pub mod locations;
