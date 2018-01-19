@@ -15,6 +15,7 @@ use rustc::ty::Ty;
 use std::iter::Step;
 use std::ops::Range;
 
+pub mod accesses;
 pub mod borrows;
 pub mod collect;
 
