@@ -1,3 +1,5 @@
+I LIKE TACOS YES I DO!
+
 # The Rust Programming Language
 
 This is the main source code repository for [Rust]. It contains the compiler,
